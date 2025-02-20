@@ -55,6 +55,8 @@ for DATA_TYPE in "${DATATYPES[@]}"; do
         rollout.response_length=32768 \
         rollout.top_k=-1 \
         rollout.top_p=0.95 \
-        rollout.gpu_memory_utilization=0.95 \
-        rollout.tensor_model_parallel_size=1
+        rollout.gpu_memory_utilization=0.8 \
+        rollout.tensor_model_parallel_size=2
 done
+# nnodes增大，则可增大gpu_memory_utilization至0.9-0.95
+# 如遇OOM，一般减小gpu_memory_utilization即可

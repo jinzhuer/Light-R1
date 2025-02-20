@@ -19,6 +19,7 @@ import ray
 import numpy as np
 import hydra
 import os
+import time
 from tabulate import tabulate
 
 os.environ['NCCL_DEBUG'] = 'WARN'
@@ -40,6 +41,7 @@ from verl.single_controller.ray import RayClassWithInitArgs, RayResourcePool, Ra
 
 @hydra.main(config_path='config', config_name='generation', version_base=None)
 def main(config):
+    start_time = time.time()
     from pprint import pprint
     from omegaconf import OmegaConf
     pprint(OmegaConf.to_container(config, resolve=True))  # resolve=True will eval symbol values
@@ -77,16 +79,27 @@ def main(config):
         config_batch_size = config.data.batch_size
         dp_size = wg.world_size // config.rollout.tensor_model_parallel_size
         num_batch = (total_samples // config_batch_size) + 1
+        if total_samples % config_batch_size == 0:
+            num_batch = total_samples // config_batch_size
         output_lst = []  # We'll reshape at the end
+
+        print('len(dataset):', total_samples)
+        print('wg.worker_names:', wg.worker_names)
 
         for batch_idx in range(num_batch):
             print(f'[{batch_idx+1}/{num_batch}] Start to process.')
             batch_chat_lst = chat_lst[batch_idx * config_batch_size:(batch_idx + 1) * config_batch_size]
             
             # Repeat the batch n_samples times
+            from pprint import pprint
             repeated_chat_lst = []
             for chat in batch_chat_lst:
-                repeated_chat_lst.extend([chat] * config.data.n_samples)
+                repeated_chat_lst.extend([chat] * config.data.n_samples)  # 这里重复，所以每个生成request n=1
+            print('repeated_chat_lst0')
+            pprint(repeated_chat_lst[:3])
+            repeated_chat_lst = batch_chat_lst * config.data.n_samples  # 负载更均衡
+            print('repeated_chat_lst1')
+            pprint(repeated_chat_lst[:3])
             
             inputs = tokenizer.apply_chat_template(repeated_chat_lst,
                                                  add_generation_prompt=True,
@@ -102,6 +115,7 @@ def main(config):
             position_ids = compute_position_id_with_mask(attention_mask)
 
             batch_dict = {'input_ids': input_ids, 'attention_mask': attention_mask, 'position_ids': position_ids}
+            print(f'main_gen.py, input_ids.shape = {input_ids.shape}, content:', input_ids[:, -32:-26])
 
             data = DataProto.from_dict(batch_dict)
             real_batch_size = data.batch['input_ids'].shape[0]
@@ -120,7 +134,7 @@ def main(config):
             print(f'[{batch_idx+1}/{num_batch}] Start to generate.')
             
             # Generate all samples at once
-            print(len(data.batch['input_ids']))
+            print('ZHS batch len:', len(data.batch['input_ids']))
             output = wg.generate_sequences(data)
             # Remove dummy data
             output = output[:real_batch_size]
@@ -138,6 +152,7 @@ def main(config):
         # Reshape output_lst from (total_samples,) to (n_data, n_samples)
         total_samples = len(output_lst)
         n_data = total_samples // config.data.n_samples
+        output_lst = sum([output_lst[i::n_data] for i in range(n_data)], start=[])  # 恢复负载均衡原始顺序
         output_lst = np.array(output_lst).reshape(n_data, config.data.n_samples).tolist()
 
         # Add to the data frame
@@ -179,8 +194,10 @@ def main(config):
     pass_at_n = passes / total
     pass_at_1 = np.mean(total_scores)
 
+    spent_time = time.time() - start_time
+    spent_hours = spent_time / 60 / 60
     # Save metrics to CSV
-    csv_path = os.path.join(output_dir, 'pass.csv')
+    csv_path = os.path.join(output_dir, f'pass_{spent_hours:.2f}h.csv')
     
     # Prepare the row data
     # Extract the dataset name from the path
