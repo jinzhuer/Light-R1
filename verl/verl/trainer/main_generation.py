@@ -183,7 +183,10 @@ def main(config):
         ground_truth = reward_data['ground_truth']
         score_lst = []
         for r in response_lst:
-            score = reward_fn(r, ground_truth)
+            if config.data.skip_format_reward:
+                score = reward_fn(r, ground_truth, skip_format_reward=True)
+            else:
+                score = reward_fn(r, ground_truth)
             score_lst.append(score)
         max_score = np.max(score_lst)
         total_scores.append(score_lst)

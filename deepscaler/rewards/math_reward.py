@@ -33,10 +33,13 @@ class RewardMathFn(RewardFn):
         model_response = input.model_response
         
         # Extract solution.
-        if THOUGHT_DELIMITER_START in model_response and THOUGHT_DELIMITER_END in model_response:
-            model_solution = model_response.split(THOUGHT_DELIMITER_END)[1]
+        if not self.config.skip_format_reward:
+            if THOUGHT_DELIMITER_START in model_response and THOUGHT_DELIMITER_END in model_response:
+                model_solution = model_response.split(THOUGHT_DELIMITER_END)[1]
+            else:
+                return RewardOutput(reward=self.config.format_error_reward, is_correct=False)
         else:
-            return RewardOutput(reward=self.config.format_error_reward, is_correct=False)
+            model_solution = model_response
         
         model_answer = extract_answer(model_solution)
         if model_answer is None:
@@ -98,9 +101,10 @@ class RewardMathFn(RewardFn):
                 
         return RewardOutput(reward=self.config.incorrect_reward, is_correct=False)
 
-def deepscaler_reward_fn(solution_str: str, ground_truth: Union[str, List[str]], enable_llm = False):
+def deepscaler_reward_fn(solution_str: str, ground_truth: Union[str, List[str]], enable_llm = False, skip_format_reward = False):
     reward_config = RewardConfig()
     reward_config.use_math_orm = enable_llm
+    reward_config.skip_format_reward = skip_format_reward
     reward_fn = RewardMathFn(reward_config)
     reward_response = reward_fn(RewardInput(problem=solution_str, problem_type=RewardType.MATH, model_response=solution_str, ground_truth={"answer": ground_truth}))
     return reward_response.is_correct
