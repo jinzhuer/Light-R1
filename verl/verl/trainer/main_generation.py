@@ -164,7 +164,7 @@ def main(config):
         # Write to a new parquet
         output_dir = os.path.dirname(config.data.output_path)
         makedirs(output_dir, exist_ok=True)
-        dataset.to_parquet(config.data.output_path)
+        dataset.to_json(config.data.output_path, orient='records', force_ascii=False, lines=True)
     
     output_dir = os.path.dirname(config.data.output_path)
     # Compute evaluation metrics

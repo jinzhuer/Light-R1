@@ -47,7 +47,7 @@ for DATA_TYPE in "${DATATYPES[@]}"; do
         trainer.nnodes=1 \
         trainer.n_gpus_per_node=8 \
         data.path=./processed_data/${DATA_TYPE}.parquet \
-        data.output_path=${OUTPUT_DIR}/${DATA_TYPE}.parquet \
+        data.output_path=${OUTPUT_DIR}/${DATA_TYPE}.json \
         data.n_samples=64 \
         data.batch_size=2048 \
         model.path=${MODEL_PATH} \
@@ -59,5 +59,6 @@ for DATA_TYPE in "${DATATYPES[@]}"; do
         rollout.tensor_model_parallel_size=2 \
         +data.skip_format_reward=True
 done
+# +data.skip_format_reward=True是默认行为，跳过校验答案正确性时的格式检查，没<think>也没事
 # nnodes增大，则可增大gpu_memory_utilization至0.9-0.95
 # 如遇OOM，一般减小gpu_memory_utilization即可
