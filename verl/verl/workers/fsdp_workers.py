@@ -249,7 +249,7 @@ class ActorRolloutRefWorker(Worker):
         log_gpu_memory_usage('After Actor FSDP init', logger=logger)
 
         # TODO: add more optimizer args into config
-        if role == 'actor':
+        if role == 'actor' and optim_config is not None:
             from verl.utils.torch_functional import get_constant_schedule_with_warmup
             actor_optimizer = optim.AdamW(actor_module_fsdp.parameters(),
                                           lr=optim_config.lr,
@@ -323,7 +323,7 @@ class ActorRolloutRefWorker(Worker):
                 optim_config = self.config.actor.optim
                 fsdp_config = self.config.actor.fsdp_config
             else:
-                optim_config = self.config.actor.optim
+                optim_config = None
                 fsdp_config = OmegaConf.create()
             self.actor_module_fsdp, self.actor_optimizer, self.actor_lr_scheduler, self.actor_model_config = self._build_model_optimizer(
                 model_path=self.config.model.path,
@@ -439,7 +439,11 @@ class ActorRolloutRefWorker(Worker):
         with self.rollout_sharding_manager:
             log_gpu_memory_usage('After entering rollout sharding manager', logger=logger)
 
-            prompts = self.rollout_sharding_manager.preprocess_data(prompts)
+            # if self.rank == 0:
+            #     print('fsdp_worker.py, before preprocess_data:', prompts.batch['input_ids'].shape, prompts.batch['input_ids'][:, 16:-16])
+            prompts = self.rollout_sharding_manager.preprocess_data(prompts)  # 这里再把一个vllm的实例(tp group)的所有数据收集到一起
+            # if self.rank == 0:
+            #     print('fsdp_worker.py, after  preprocess_data:', prompts.batch['input_ids'].shape, prompts.batch['input_ids'][:, -32:-26])
             output = self.rollout.generate_sequences(prompts=prompts)
 
             log_gpu_memory_usage('After rollout generation', logger=logger)

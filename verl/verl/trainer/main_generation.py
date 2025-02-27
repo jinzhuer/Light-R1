@@ -120,6 +120,8 @@ def main(config):
             data = DataProto.from_dict(batch_dict)
             real_batch_size = data.batch['input_ids'].shape[0]
             
+            original_dp_size = dp_size
+            dp_size = wg.world_size  # ray会先把数据分到每个worker，再每个tp group内收集，所以要保证总数能被worker数整除，该校验不应考虑tp
             if real_batch_size % dp_size != 0:
                 dummy_data_size = dp_size - real_batch_size % dp_size
                 dummy_data = data[:dummy_data_size]
@@ -127,6 +129,7 @@ def main(config):
                 print(
                     f'dp_size {dp_size} is not divisible by real_batch_size {real_batch_size}, add {dummy_data_size} dummy data'
                 )
+            dp_size = original_dp_size
 
             batch_size = data.batch['input_ids'].shape[0]
             assert batch_size % dp_size == 0, f'batch_size {batch_size} is not divisible by dp_size {dp_size}'
