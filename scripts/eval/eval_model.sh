@@ -56,5 +56,6 @@ for DATA_TYPE in "${DATATYPES[@]}"; do
         rollout.top_k=-1 \
         rollout.top_p=0.95 \
         rollout.gpu_memory_utilization=0.95 \
-        rollout.tensor_model_parallel_size=1
+        rollout.tensor_model_parallel_size=1 \
+        +data.skip_format_reward=True
 done

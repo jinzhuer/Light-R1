@@ -47,14 +47,14 @@ def main(config):
     pprint(OmegaConf.to_container(config, resolve=True))  # resolve=True will eval symbol values
     OmegaConf.resolve(config)
 
+    local_path = copy_local_path_from_hdfs(config.model.path)
+    from verl.utils import hf_tokenizer
+    tokenizer = hf_tokenizer(local_path)
     # Check if output file already exists
     if os.path.exists(config.data.output_path):
         print(f"Output file {config.data.output_path} already exists. Skipping generation and proceeding to evaluation.")
         dataset = pd.read_parquet(config.data.output_path)
     else:
-        local_path = copy_local_path_from_hdfs(config.model.path)
-        from verl.utils import hf_tokenizer
-        tokenizer = hf_tokenizer(local_path)
 
         if config.rollout.temperature == 0.:
             assert config.data.n_samples == 1, 'When temperature=0, n_samples must be 1.'
@@ -173,6 +173,16 @@ def main(config):
     data_sources = dataset[config.data.data_source_key]
     reward_model_data = dataset[config.data.reward_model_key]
 
+    # 统计长度均值和截断比例
+    output_lst = [str(r) for responses_this in list(responses) for r in responses_this]
+    # print(output_lst)
+    print(type(output_lst), type(output_lst[0]))
+    unpad_tokenized = tokenizer(output_lst, add_special_tokens=False).input_ids
+    len_response_tokens = [len(tokens) for tokens in unpad_tokenized]
+    len_mean = np.mean(len_response_tokens)
+    cutoff_ratio = sum([l == config.rollout.response_length for l in len_response_tokens]) / len(unpad_tokenized)
+    print('length cutoff ratio:', cutoff_ratio)
+
     passes = 0
     total = len(dataset)
     total_scores = []
@@ -215,7 +225,10 @@ def main(config):
         'model_path': config.model.path,
         'dataset': dataset_name,
         'pass@1': pass_at_1,
-        f'pass@{n_samples}': pass_at_n
+        f'pass@{n_samples}': pass_at_n,
+        'cutoff_raio': cutoff_ratio,
+        'mean_response_tokens': len_mean,
+        'run_hours': spent_hours
     }
 
     # Check if file exists
