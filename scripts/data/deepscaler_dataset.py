@@ -29,7 +29,7 @@ def extract_solution(solution_str: str) -> str:
     return remove_boxed(last_boxed_only_string(solution_str))
 
 
-def make_map_fn(split: str):
+def make_map_fn(split: str, is_gpqa=False):
     """Create a mapping function to process dataset examples.
 
     Args:
@@ -41,7 +41,8 @@ def make_map_fn(split: str):
     def process_fn(example: Dict[str, Any], idx: int) -> Optional[Dict[str, Any]]:
         question = example.pop('problem')
         instruction = "Let's think step by step and output the final answer within \\boxed{}."
-        question = f"{question} {instruction}"
+        if not is_gpqa:
+            question = f"{question} {instruction}"
         answer = example.pop('answer')
 
         data = {
@@ -76,12 +77,12 @@ if __name__ == '__main__':
     hdfs_dir = args.hdfs_dir
     
     # Make local directory if it doesn't exist
-    makedirs(local_dir)
+    makedirs(local_dir, exist_ok=True)
 
     # Initialize datasets
     train_datasets = [TrainDataset.DEEPSCALER]
     train_dataset = load_dataset(train_datasets[0])
-    test_datasets = [TestDataset.AIME, TestDataset.AMC, TestDataset.MATH, TestDataset.MINERVA, TestDataset.OLYMPIAD_BENCH, TestDataset.AIME25]
+    test_datasets = [TestDataset.AIME, TestDataset.AMC, TestDataset.MATH, TestDataset.MINERVA, TestDataset.OLYMPIAD_BENCH, TestDataset.AIME25, TestDataset.GPQA]
     
     test_datasets_data = [load_dataset(d) for d in test_datasets]
 
@@ -96,7 +97,7 @@ if __name__ == '__main__':
     # Process and save each test dataset separately
     for test_dataset, test_data_list in zip(test_datasets, test_datasets_data):
         test_data: List[Dict[str, Any]] = []
-        process_fn = make_map_fn('test')
+        process_fn = make_map_fn('test', is_gpqa=test_data == TestDataset.GPQA)
         for idx, example in enumerate(test_data_list):
             processed_example = process_fn(example, idx)
             if processed_example is not None:
