@@ -37,6 +37,7 @@ from verl.utils.fs import copy_local_path_from_hdfs
 from verl.workers.fsdp_workers import ActorRolloutRefWorker
 from verl.utils.hdfs_io import makedirs
 from verl.single_controller.ray import RayClassWithInitArgs, RayResourcePool, RayWorkerGroup
+from deepscaler.rewards.math_reward import deepscaler_reward_fn
 
 
 @hydra.main(config_path='config', config_name='generation', version_base=None)
@@ -53,7 +54,10 @@ def main(config):
     # Check if output file already exists
     if os.path.exists(config.data.output_path):
         print(f"Output file {config.data.output_path} already exists. Skipping generation and proceeding to evaluation.")
-        dataset = pd.read_parquet(config.data.output_path)
+        if config.data.output_path.endswith('.parquet'):
+            dataset = pd.read_parquet(config.data.output_path)
+        elif config.data.output_path.endswith('.json'):
+            dataset = pd.read_json(config.data.output_path, orient='records', lines=True)
     else:
 
         if config.rollout.temperature == 0.:
@@ -161,10 +165,20 @@ def main(config):
         # Add to the data frame
         dataset['responses'] = output_lst
 
+        # add correctness field
+        total_lst = compute_correctness(dataset)
+        dataset['correctness'] = total_lst
+
         # Write to a new parquet
         output_dir = os.path.dirname(config.data.output_path)
         makedirs(output_dir, exist_ok=True)
         dataset.to_json(config.data.output_path, orient='records', force_ascii=False, lines=True)
+    
+    if 'correctness' not in dataset:
+        total_lst = compute_correctness(dataset)
+        dataset['correctness'] = total_lst
+        dataset.to_json(config.data.output_path, orient='records', force_ascii=False, lines=True)
+        print(f"Output file {config.data.output_path} doesn't have correctness field. Have computed each answer's correctness and saved.")
     
     output_dir = os.path.dirname(config.data.output_path)
     # Compute evaluation metrics
@@ -235,7 +249,7 @@ def main(config):
     file_exists = os.path.isfile(csv_path)
     
     # Write to CSV
-    with open(csv_path, mode='a', newline='') as f:
+    with open(csv_path, mode='a', newline='') as f:  # 追加写，不会覆盖，所以没事
         writer = csv.DictWriter(f, fieldnames=row_data.keys())
         if not file_exists:
             writer.writeheader()
@@ -246,6 +260,21 @@ def main(config):
     
     # Print table
     print(tabulate(table_data, headers=['Metric', 'Value'], tablefmt='grid'))
+
+
+def compute_correctness(dataset):
+    total_lst = list()
+    for i in range(len(dataset)):
+        row = dataset.iloc[i]
+        prompt = row['prompt']
+        gt = row['reward_model']['ground_truth']
+        # print(gt)
+        responses_this = row['responses']
+
+        true_false = [int(deepscaler_reward_fn(response, gt, skip_format_reward=True)) for response in responses_this]
+        total_lst.append(true_false)
+    return total_lst
+
 
 # Add the select_reward_fn from main_eval.py
 def select_reward_fn(data_source):
