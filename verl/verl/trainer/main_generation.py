@@ -21,6 +21,7 @@ import hydra
 import os
 import time
 from tabulate import tabulate
+from collections import Counter
 
 os.environ['NCCL_DEBUG'] = 'WARN'
 os.environ['TOKENIZERS_PARALLELISM'] = 'true'
@@ -38,6 +39,7 @@ from verl.workers.fsdp_workers import ActorRolloutRefWorker
 from verl.utils.hdfs_io import makedirs
 from verl.single_controller.ray import RayClassWithInitArgs, RayResourcePool, RayWorkerGroup
 from deepscaler.rewards.math_reward import deepscaler_reward_fn
+from deepscaler.rewards.math_utils.utils import extract_answer
 
 
 @hydra.main(config_path='config', config_name='generation', version_base=None)
@@ -200,6 +202,7 @@ def main(config):
     passes = 0
     total = len(dataset)
     total_scores = []
+    conses = 0
     
     for i in range(total):
         response_lst = responses[i]
@@ -222,10 +225,28 @@ def main(config):
         total_scores.append(score_lst)
         if max_score == 1:
             passes += 1
+        
+        extracted_lst = [extract_answer(r) for r in response_lst]
+        extracted_lst = [r for r in extracted_lst if r is not None]
+        cons_answers = find_mode(extracted_lst)
+        cons_response_lst = [r for r in response_lst if extract_answer(r) in cons_answers]
+        is_cons_correct_list = list()
+        for r in cons_response_lst:
+            try:
+                if config.data.skip_format_reward:
+                    score = reward_fn(r, ground_truth, skip_format_reward=True)
+                else:
+                    score = reward_fn(r, ground_truth, skip_format_reward=False)
+            except:  # 没字段表示没指定该参数，默认跳过格式校验
+                score = reward_fn(r, ground_truth, skip_format_reward=True)
+            is_cons_correct_list.append(score)
+        if any(is_cons_correct_list):
+            conses += np.mean(is_cons_correct_list)
 
     n_samples = config.data.n_samples
     pass_at_n = passes / total
     pass_at_1 = np.mean(total_scores)
+    cons_at_n = conses / total
 
     spent_time = time.time() - start_time
     spent_hours = spent_time / 60 / 60
@@ -240,6 +261,7 @@ def main(config):
         'dataset': dataset_name,
         'pass@1': pass_at_1,
         f'pass@{n_samples}': pass_at_n,
+        f'cons@{n_samples}': cons_at_n,
         'cutoff_raio': cutoff_ratio,
         'mean_response_tokens': len_mean,
         'run_hours': spent_hours
@@ -274,6 +296,15 @@ def compute_correctness(dataset):
         true_false = [int(deepscaler_reward_fn(response, gt, skip_format_reward=True)) for response in responses_this]
         total_lst.append(true_false)
     return total_lst
+
+
+def find_mode(lst):
+    if len(lst) == 0:
+        return list()
+    counter = Counter(lst)
+    max_count = max(counter.values())
+    mode = [k for k, v in counter.items() if v == max_count]
+    return mode
 
 
 # Add the select_reward_fn from main_eval.py
