@@ -1,3 +1,19 @@
+# Light-R1 Evaluation Usage
+
+1. install deepscaler of this directory into your conda env
+
+2. for all you nodes, activate your deepscaler env and `cd` to this directory and start ray as the below [Multi-Node Training](#multi-node-training-32-gpus)
+
+3. modify your number of nodes, number of samples and other arguments in `./scripts/eval/eval_model.sh`, then run
+```bash
+./scripts/eval/eval_model.sh --model [CHECKPOINT_PATH] --datasets aime aime25 gpqa --output-dir [OUTPUT_DIR]
+```
+
+
+
+
+
+# Original Readme
 <div align="center">
 
 # DeepScaleR
