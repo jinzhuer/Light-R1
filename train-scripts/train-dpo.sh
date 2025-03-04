@@ -1,3 +1,4 @@
+# Light-R1 DPO used 360-LLaMA-Factory directly
 hostfile="hostfile.2nodes"
 deepspeed --hostfile $hostfile src/train.py \
     --stage dpo \
@@ -5,7 +6,7 @@ deepspeed --hostfile $hostfile src/train.py \
     --max_steps -1 \
     --model_name_or_path [your sft stage2 model path] \
     --template qwen \
-    --dataset [your dpo pair data name] \
+    --dataset [your dpo pair data name, e.g. light-r1-dpo] \
     --preprocessing_num_workers 16 \
     --finetuning_type full \
     --sequence_parallel_size 8 \
@@ -13,11 +14,11 @@ deepspeed --hostfile $hostfile src/train.py \
     --flash_attn fa2  \
     --pref_beta 0.3 \
     --pref_loss nca_pair \
+    --cache_dir .cache \
     --overwrite_cache \
     --cutoff_len 32768 \
     --output_dir [your output dir] \
     --per_device_train_batch_size 1 \
-    --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 4 \
     --lr_scheduler_type constant \
     --save_strategy steps \
