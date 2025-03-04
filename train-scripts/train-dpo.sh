@@ -1,0 +1,38 @@
+hostfile="hostfile.2nodes"
+deepspeed --hostfile $hostfile src/train.py \
+    --stage dpo \
+    --do_train \
+    --max_steps -1 \
+    --model_name_or_path [your sft stage2 model path] \
+    --template qwen \
+    --dataset [your dpo pair data name] \
+    --preprocessing_num_workers 16 \
+    --finetuning_type full \
+    --sequence_parallel_size 8 \
+    --gradient_checkpointing True \
+    --flash_attn fa2  \
+    --pref_beta 0.3 \
+    --pref_loss nca_pair \
+    --overwrite_cache \
+    --cutoff_len 32768 \
+    --output_dir [your output dir] \
+    --per_device_train_batch_size 1 \
+    --per_device_eval_batch_size 1 \
+    --gradient_accumulation_steps 4 \
+    --lr_scheduler_type constant \
+    --save_strategy steps \
+    --save_steps 50 \
+    --logging_steps 1 \
+    --warmup_ratio 0.0 \
+    --save_total_limit 10 \
+    --learning_rate 5e-7 \
+    --save_only_model True \
+    --num_train_epochs 3.0 \
+    --bf16 true \
+    --plot_loss \
+    --seed 42 \
+    --do_eval false \
+    --deepspeed ./examples/deepspeed/ds_z3_offload_config.json \
+    --report_to tensorboard \
+    --overwrite_output_dir \
+    --ddp_timeout 180000000 \
