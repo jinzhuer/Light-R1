@@ -11,7 +11,7 @@
 |LIMO (32B)|Qwen2.5-32B-Instruct|25.2.4|56.3|47.1|
 |s1.1-32B|Qwen2.5-32B-Instruct|25.2.8|64.7|47.8|
 |OpenThinker-32B|Qwen2.5-32B-Instruct|25.2.12|66.0|50.9|
-|[**Light-R1-32B (ours)**🤗](https://huggingface.co/qihoo360/Light-R1-32B)|Qwen2.5-32B-Instruct|25.3.4|**76.6**|**64.6**| 
+| [**Light-R1-32B (ours)** 🤗](https://huggingface.co/qihoo360/Light-R1-32B) |Qwen2.5-32B-Instruct|25.3.4|**76.6**|**64.6**| 
 
 
 While much work has been open-sourced trying to reproduce DeepSeek-R1 on models of 72B or less, **none** achieves similar performance on the hard math competition AIME24 as DeepSeek-R1-Distill-Qwen-32B's score 72.6.
@@ -34,7 +34,7 @@ With the rapid development of training and inference techniques, we hope to see 
 
 - Curriculum [🤗SFT](https://huggingface.co/datasets/qihoo360/Light-R1-SFT) & [🤗DPO](https://huggingface.co/datasets/qihoo360/Light-R1-DPO) datasets
 
-- Training scripts based on [360-LLaMA-Factory](https://github.com/Qihoo360/360-LLaMA-Factory) in [train-scripts]()
+- Training scripts based on [360-LLaMA-Factory](https://github.com/Qihoo360/360-LLaMA-Factory) in [train-scripts](./train-scripts/)
 
 - Evaluation code based on [DeepScaleR](https://github.com/agentica-project/deepscaler) in [deepscaler-release](./deepscaler-release/)
     - along with evaluation logs of Light-R1-32B (e.g. [AIME24](https://huggingface.co/qihoo360/Light-R1-32B/blob/main/evaluation-results.aime24.json))
