@@ -1,4 +1,4 @@
-# Light-R1: Surpassing R1-Distill from Scratch\* with \$1000 through Curriculum SFT & DPO
+# Light-R1: Surpassing R1-Distill in Math from Scratch\* with \$1000 through Curriculum SFT & DPO
 
 *\*from models without long COT*
 
@@ -7,7 +7,6 @@
 | ---- | ---- | ---- | ---- | ---- |
 |DeepSeek-R1-Distill-Llama-70B|Llama-3.3-70B-Instruct|25.1.20|70.0|54.1|
 |DeepSeek-R1-Distill-Qwen-32B|Qwen2.5-32B|25.1.20|72.6|54.9|
-|Tiny-R1-32B-Preview (Math-Model)|DeepSeek-R1-Distill-Qwen-32B|25.2.25|73.1|N/A|
 |LIMO (32B)|Qwen2.5-32B-Instruct|25.2.4|56.3|47.1|
 |s1.1-32B|Qwen2.5-32B-Instruct|25.2.8|64.7|47.8|
 |OpenThinker-32B|Qwen2.5-32B-Instruct|25.2.12|66.0|50.9|
