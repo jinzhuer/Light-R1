@@ -31,7 +31,7 @@ With the rapid development of training and inference techniques, we hope to see 
 
 - Light-R1-32B model on [🤗 huggingface](https://huggingface.co/qihoo360/Light-R1-32B)
 
-- Curriculum [🤗SFT](https://huggingface.co/datasets/qihoo360/Light-R1-SFT) & [🤗DPO](https://huggingface.co/datasets/qihoo360/Light-R1-DPO) datasets
+- Curriculum [🤗SFT](https://huggingface.co/datasets/qihoo360/Light-R1-SFTData) & [🤗DPO](https://huggingface.co/datasets/qihoo360/Light-R1-DPOData) datasets (all our training data!)
 
 - Training scripts based on [360-LLaMA-Factory](https://github.com/Qihoo360/360-LLaMA-Factory) in [train-scripts](./train-scripts/)
 
