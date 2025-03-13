@@ -1,3 +1,8 @@
+# Update: GRPO scripts with [verl](https://github.com/volcengine/veRL)
+
+see `verl-grpo.sh` and our [tech report](https://github.com/Qihoo360/Light-R1/blob/main/Light-R1.pdf).
+
+
 # Training scripts with [360-LLaMA-Factory](https://github.com/Qihoo360/360-LLaMA-Factory)
 
 Usage:
