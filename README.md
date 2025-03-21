@@ -143,12 +143,10 @@ Training data are collected from various public sources.
 ## Citation
 
 ```bibtex
-@misc{lightr1proj,
-      title={Light-R1: Curriculum SFT, DPO and RL for Long COT from Scratch and Beyond}, 
-      author={Liang Wen, Yunke Cai, Fenrui Xiao, Xin He, Qi An, Zhenyu Duan, Yimin Du, Junchen Liu, Lifu Tang, Xiaowei Lv, Haosheng Zou, Yongchao Deng, Shousheng Jia, Xiangzheng Zhang},
-      year={2025},
-      eprint={},
-      archivePrefix={},
-      url={https://github.com/Qihoo360/Light-R1}, 
+@article{wen2025light,
+  title={Light-R1: Curriculum SFT, DPO and RL for Long COT from Scratch and Beyond},
+  author={Wen, Liang and Cai, Yunke and Xiao, Fenrui and He, Xin and An, Qi and Duan, Zhenyu and Du, Yimin and Liu, Junchen and Tang, Lifu and Lv, Xiaowei and Zou, Haosheng and Deng, Yongchao and Jia, Shousheng and Zhang, Xiangzheng},
+  journal={arXiv preprint arXiv:2503.10460},
+  year={2025}
 }
 ```
