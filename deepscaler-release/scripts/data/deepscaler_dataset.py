@@ -97,7 +97,7 @@ if __name__ == '__main__':
     # Process and save each test dataset separately
     for test_dataset, test_data_list in zip(test_datasets, test_datasets_data):
         test_data: List[Dict[str, Any]] = []
-        process_fn = make_map_fn('test', is_gpqa=test_data == TestDataset.GPQA)
+        process_fn = make_map_fn('test', is_gpqa=test_dataset == TestDataset.GPQA)
         for idx, example in enumerate(test_data_list):
             processed_example = process_fn(example, idx)
             if processed_example is not None:
